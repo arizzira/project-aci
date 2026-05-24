@@ -1,0 +1,134 @@
+/* Import Font Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #0f172a; /* Base dark color */
+    color: #e2e8f0;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* =========================================
+   ANIMATED BACKGROUND ORBS
+========================================= */
+.bg-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: -1;
+    animation: float 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.orb-1 {
+    width: 500px; height: 500px;
+    background: rgba(99, 102, 241, 0.25); /* Indigo */
+    top: -10%; left: -10%;
+}
+
+.orb-2 {
+    width: 600px; height: 600px;
+    background: rgba(168, 85, 247, 0.2); /* Purple */
+    bottom: -20%; right: -10%;
+    animation-delay: -5s;
+    animation-direction: alternate-reverse;
+}
+
+.orb-3 {
+    width: 400px; height: 400px;
+    background: rgba(14, 165, 233, 0.15); /* Sky Blue */
+    top: 40%; left: 40%;
+    transform: translate(-50%, -50%);
+    animation-duration: 25s;
+}
+
+@keyframes float {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(50px, 80px) scale(1.1); }
+    100% { transform: translate(-30px, -50px) scale(0.95); }
+}
+
+/* =========================================
+   GLASSMORPHISM PANELS
+========================================= */
+.glass-panel {
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border-radius: 1.25rem; /* 20px */
+}
+
+/* Input Fields */
+.glass-input {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    transition: all 0.3s ease;
+}
+.glass-input:focus {
+    border-color: rgba(99, 102, 241, 0.6);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    outline: none;
+    background: rgba(0, 0, 0, 0.4);
+}
+.glass-input::file-selector-button {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    margin-right: 1rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+.glass-input::file-selector-button:hover {
+    opacity: 0.9;
+}
+
+/* Custom Scrollbar (Dark Theme) */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+/* =========================================
+   ANIMATIONS
+========================================= */
+/* Splash Screen */
+#splash-screen {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(25px);
+    transition: opacity 1s ease, visibility 1s ease;
+}
+.splash-fade-out {
+    opacity: 0; visibility: hidden;
+}
+.text-animate {
+    animation: popIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes popIn {
+    0% { opacity: 0; transform: translateY(20px) scale(0.9); filter: blur(10px); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+/* Entry Animation for Content */
+.slide-up {
+    animation: slideUpFade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+    transform: translateY(30px);
+}
+.delay-1 { animation-delay: 0.2s; }
+.delay-2 { animation-delay: 0.4s; }
+
+@keyframes slideUpFade {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Table Header Glass */
+table th {
+    background: rgba(30, 41, 59, 0.8);
+    backdrop-filter: blur(8px);
+}

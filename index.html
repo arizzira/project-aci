@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accurate Sync Dashboard</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body class="selection:bg-indigo-500 selection:text-white flex flex-col relative">
+
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <div id="splash-screen" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="text-center text-animate">
+            <div class="inline-block p-4 rounded-full bg-white/5 border border-white/10 shadow-[0_0_50px_rgba(168,85,247,0.3)] mb-4 backdrop-blur-md">
+                <span class="text-4xl">✨</span>
+            </div>
+            <h1 class="text-3xl font-medium text-white mb-2 tracking-wide drop-shadow-md">Semangat sayang kerjanya!</h1>
+            <p class="text-sm font-normal text-indigo-300">Aci pasti bisa, tunggu sebentar ya... ❤️</p>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto w-full p-6 lg:p-8 flex-1 flex flex-col relative z-10">
+        
+        <header class="mb-10 text-center mt-2 slide-up">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-indigo-300 text-xs font-medium mb-4 backdrop-blur-sm">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                System Online
+            </div>
+            <h1 class="text-3xl font-medium text-white mb-2 drop-shadow-sm">Accurate Sync Dashboard</h1>
+            <p class="text-sm font-normal text-slate-400">Didesain khusus untuk mempermudah kerjaan Aci ❤️</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <div class="lg:col-span-4 flex flex-col gap-6 slide-up delay-1">
+                
+                <div class="glass-panel p-6">
+                    <h2 class="text-base font-medium text-white mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
+                        <span class="text-indigo-400">📖</span> Panduan Cepat
+                    </h2>
+                    <ul class="text-sm font-normal text-slate-300 space-y-3 list-disc list-inside">
+                        <li>Sistem otomatis <strong>menyaring (membuang)</strong> barang satuan/eceran.</li>
+                        <li>Sistem otomatis mendeteksi barang dengan stok <strong>kosong (0)</strong>.</li>
+                        <li>Klik <strong>Mulai Proses</strong> lalu tinggal <em>copy</em> aja ya sayang hasilnya.</li>
+                    </ul>
+                </div>
+
+                <div class="glass-panel p-6">
+                    <div class="mb-5">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">1. Upload File Accurate (CSV)</label>
+                        <input type="file" id="fileAccurate" accept=".csv" class="glass-input block w-full text-sm rounded-xl p-2 cursor-pointer">
+                    </div>
+                    
+                    <div class="mb-8">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">2. Upload File Sheets (CSV)</label>
+                        <input type="file" id="filePoint" accept=".csv" class="glass-input block w-full text-sm rounded-xl p-2 cursor-pointer">
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <button id="btnProses" onclick="prosesData()" 
+                            class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-medium py-3 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(99,102,241,0.4)]">
+                            Mulai Proses Data
+                        </button>
+                        <button onclick="resetForm()" 
+                            class="w-full bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white font-medium py-3 px-4 rounded-xl transition-all">
+                            Reset Form
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultPanel" class="lg:col-span-8 glass-panel p-6 hidden flex-col h-[70vh] slide-up delay-2">
+                
+                <div class="flex justify-between items-center mb-5 pb-4 border-b border-white/10">
+                    <h2 class="text-base font-medium text-white flex items-center gap-2">
+                        <span class="text-emerald-400">📊</span> Laporan Hasil Sinkronisasi
+                    </h2>
+                    <button onclick="copyKeClipboard()" 
+                        class="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 font-medium py-2 px-4 rounded-lg text-sm transition-colors flex items-center gap-2">
+                        📋 Copy Angka Sistem
+                    </button>
+                </div>
+                
+                <div class="flex gap-6 flex-1 min-h-0">
+                    <div class="flex-1 overflow-auto border border-white/10 rounded-xl bg-black/10">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="sticky top-0 shadow-sm z-10 text-slate-300">
+                                <tr>
+                                    <th class="p-4 font-medium border-b border-white/10">Baris</th>
+                                    <th class="p-4 font-medium border-b border-white/10">Nama Barang (Di Sheets)</th>
+                                    <th class="p-4 font-medium border-b border-white/10">Stok</th>
+                                    <th class="p-4 font-medium border-b border-white/10">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="font-normal text-slate-300 divide-y divide-white/5">
+                                </tbody>
+                        </table>
+                    </div>
+
+                    <div class="w-[140px] flex flex-col">
+                        <label class="text-xs font-medium text-indigo-300 text-center mb-2">Area Copy (Sheet)</label>
+                        <textarea id="outputData" readonly 
+                            class="flex-1 w-full p-3 border border-white/10 rounded-xl font-mono text-sm resize-none bg-black/20 outline-none text-slate-200 focus:border-indigo-500 transition-colors custom-scrollbar"></textarea>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animasi Splash Screen
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.classList.add('splash-fade-out');
+            }, 2800); // Tampil sedikit lebih lama biar animasinya terasa
+        });
+
+        function resetForm() {
+            document.getElementById('fileAccurate').value = "";
+            document.getElementById('filePoint').value = "";
+            document.getElementById('resultPanel').classList.add('hidden');
+            document.getElementById('resultPanel').classList.remove('flex');
+            document.getElementById('tableBody').innerHTML = "";
+            document.getElementById('outputData').value = "";
+            document.getElementById('btnProses').innerHTML = "🚀 Mulai Proses Data";
+        }
+
+        function bacaCSV(file) {
+            return new Promise((resolve, reject) => {
+                Papa.parse(file, {
+                    skipEmptyLines: true,
+                    complete: function(results) { resolve(results.data); },
+                    error: function(err) { reject(err); }
+                });
+            });
+        }
+
+        async function prosesData() {
+            const fileAccurate = document.getElementById('fileAccurate').files[0];
+            const filePoint = document.getElementById('filePoint').files[0];
+
+            if (!fileAccurate || !filePoint) {
+                alert("Sayang, file CSV-nya jangan lupa dimasukin dulu ya! 😊");
+                return;
+            }
+
+            document.getElementById('btnProses').innerHTML = "⏳ Memproses Data...";
+            document.getElementById('tableBody').innerHTML = "";
+
+            try {
+                const [dataAccurate, dataPoint] = await Promise.all([
+                    bacaCSV(fileAccurate),
+                    bacaCSV(filePoint)
+                ]);
+
+                const mapAccurate = {};
+                const barangSulawesi = new Set(); 
+                
+                // 1. OLAH DATA ACCURATE
+                for (let i = 1; i < dataAccurate.length; i++) {
+                    if (dataAccurate[i].length >= 40) {
+                        let namaBarang = dataAccurate[i][3]; 
+                        let kolomSatuan = dataAccurate[i][5]; 
+                        let gudang = dataAccurate[i][39];    
+                        let stok = dataAccurate[i][40];      
+
+                        if (namaBarang && gudang && stok) {
+                            let key = String(namaBarang).trim().toLowerCase();
+                            let namaGudang = String(gudang).trim().toLowerCase();
+                            let namaSatuan = String(kolomSatuan).trim().toLowerCase();
+                            let stokFloat = parseFloat(stok);
+
+                            // Filter satuan eceran
+                            const satuanDilarang = ["pcs", "botol", "kaleng", "cup", "biji", "bungkus", "pck", "lbr", "set", "porsi"];
+                            if (key.includes("(satuan)") || satuanDilarang.includes(namaSatuan)) {
+                                continue; 
+                            }
+
+                            if (namaGudang === "sulawesi") {
+                                barangSulawesi.add(key); 
+                            } else {
+                                if (!isNaN(stokFloat)) {
+                                    if (mapAccurate[key] === undefined) {
+                                        mapAccurate[key] = stokFloat;
+                                    } else {
+                                        mapAccurate[key] += stokFloat;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 🛠️ KAMUS ALIAS (Sama seperti sebelumnya)
+                const kamusAlias = {
+                    "t.botol 350 ml": "teh botol 350 ml",
+                    "t.botol 450 ml": "teh botol pet reguler 24x450 ml",
+                    "teh botol kotak 250ml": "teh botol kotak 250 ml",
+                    "teh botol kotak 200ml": "teh botol kotak 24 x 200 ml",
+                    "teh gelas 24cupx175ml": "teh gelas original cup 24 x 160+20 ml",
+                    "teh gelas big": "teh gelas original big 24 x 250 ml",
+                    "teh kotak 300": "teh kotak 250 ml (ekstra 50 ml)",
+                    "teh kotak 220": "teh kotak 220 ml",
+                    "teh sariwangi": "teh celup sariwangi isi 50",
+                    "teh gunung": "teh celup gunung satria isi 25",
+                    "teh madu lemon": "teh lemon madu botol 350 ml",
+                    "teh pucuk": "teh pucuk harum 24 x 350 ml",
+                    "ft. apel 500 ml": "fruitea pet 500 ml apel",
+                    "ft. bc 500 ml": "fruitea pet 500 ml bc",
+                    "ft. freeze 500 ml": "fruitea pet 500 ml freeze",
+                    "ft. str 500 ml": "fruitea pet 500 ml str",
+                    "ft. extrim 500 ml": "fruitea pet 500 ml extrim",
+                    "ft. apel 350 ml": "fruitea apel botol 350ml",
+                    "ft. bc 350 ml": "fruitea bc botol 350ml",
+                    "ft. cocopandan 350 ml": "fruitea cocopandan+nata de coco botol 350ml",
+                    "ft. freeze 350 ml": "fruitea freeze botol 350ml",
+                    "ft. lemon 350 ml": "fruitea lemon botol 350ml",
+                    "ft. markisa 350 ml": "fruitea markisa botol 350ml",
+                    "ft. strawberry 350 ml": "fruitea str botol 350ml",
+                    "ft freeze kotak": "fruitea (ktk) 24x250 ml freeze",
+                    "aqua 1.500 ml": "aqua 1500 ml",
+                    "aqua 600 ml": "aqua 600 ml/tanggung",
+                    "aqua cube 220 ml": "aqua 220 ml cube",
+                    "aqua 330 ml": "aqua mini 330 ml",
+                    "festa gelas": "mineral gelas \"festa\"",
+                    "cleo 220ml eco": "cleo 220 ml eco",
+                    "vit": "vit 24x550 ml",
+                    "q-bic 1500 lt": "q-bic 1.500 ml",
+                    "q-bic 220": "q-bic gelas 200 ml",
+                    "q-bic 550": "q-bic 550ml",
+                    "susu beruang": "susu beruang",
+                    "ultra str": "ultra uht strawberry 40x125 ml",
+                    "ultra cok": "ultra uht coklat 40x125 ml",
+                    "ultra plain": "ultra uht full cream plain 40x125 ml",
+                    "indomilk": "indomilk uht food service 950 ml",
+                    "nu yogurt 450ml": "nu yogurt tea",
+                    "mizone cranberry": "mizone cranberry 500 ml x 12 botol",
+                    "mizone leci": "mizone lychee lemon 500 ml x 12 botol",
+                    "mizone coco": "mizone coco boost 12x500ml",
+                    "nipis madu": "nipis madu 12 x 330 ml",
+                    "kratingdaeng": "kratingdaeng",
+                    "sprite 250 ml": "sprite pet 12x250 ml",
+                    "fanta 250 ml": "fanta str pet 12x250 ml",
+                    "coca cola 250 ml": "coca-cola pet 12x250 ml",
+                    "bintang zero": "bintang zero",
+                    "zoda 250 ml": "zoda (24 x 250 ml)",
+                    "sijiro gelas": "sijiro gelas 220 ml",
+                    "adem sari chingku 320 ml": "cingku kaleng",
+                    "cincau cap panda 310 ml": "cincau panda kaleng 24 x 310 ml",
+                    "greensands 250ml": "greensands kaleng",
+                    "hydro coco 250 ml": "hydro coco 250 ml",
+                    "floridina coco": "floridina coco 350 ml",
+                    "floridina orange": "floridina orange 350 ml",
+                    "golda capucino isi 12 pcs": "golda cappuccino 200 ml",
+                    "golda dolce latte isi 12 pcs": "golda dolce latte 200 ml",
+                    "panther grape": "panther energy drink grape 24x170ml",
+                    "panther mix fruit": "panther energy drink mix fruit 24x170ml",
+                    "power f mixfruit": "power f cup mixfruit 24 x 180 ml",
+                    "power f action": "power f action cup (red) 24 x 180 ml",
+                    "power f grape": "power f cup grape 24 x 180 ml",
+                    "naraya soya": "naraya soya 320 ml x 24 botol",
+                    "larutan cap badak str": "larutan cap badak str 24x320ml",
+                    "larutan cap badak rasa anggur": "larutan cap badak anggur 24x320ml",
+                    "larutan cap badak rasa jambu": "larutan cap badak jambu 24x320ml",
+                    "larutan cap badak rasa jeruk": "larutan cap badak jeruk 24x320ml",
+                    "larutan cap badak rasa leci": "larutan cap badak leci 24x320ml",
+                    "seruput kopi tulen": "kopi seruput susu tulen 200 ml",
+                    "seruput kopi aren": "kopi seruput susu aren 200 ml",
+                    "kopi kapal api + gula rasa mantap 12 x 10 x 24 gr": "kapal api +gula rasa mantap 12x10x24gr",
+                    "kopi kapal api spesial mix 12x10x23 gr": "kapal api special mix 12x10x23 gr",
+                    "kopi abc mocca 10x27gr": "kopi abc mocca renceng 27 gr (10+1)",
+                    "good day cappucino 10x12x25 gr": "good day cappucino 12x10x25 gr",
+                    "good day latte buterscoth 12x10x22 gr": "good day latte butterscotch 12x10x22gr",
+                    "good day latte original 12x 10x22 gr": "good day latte original 12x10x22g",
+                    "kopiko lucky day": "kopiko lucky day 12 x 180 ml",
+                    "top kopi gula aren": "top kopi gula aren 12x15x22gr",
+                    "marjan cocopandan": "marjan cocopandan",
+                    "marjan melon": "marjan melon",
+                    "sirup abc orange": "sirup abc squash delight orange 12x450 ml",
+                    "sirup abc leci": "sirup abc squash delight lychee 12 x 450 ml",
+                    "sirup abc mangga": "sirup abc squash delight mango 12x450 ml",
+                    "sirup abc nanas": "sirup abc squash delight pineapple 12x450 ml",
+                    "minyak kita pillow 1l": "minyak kita 1l (pillow)",
+                    "minyak mitra 2ltr": "minyak mitra co sni 6 x 2 l pouch",
+                    "minyak kita 1ltr": "minyak kita 12 x 1l (pouch)",
+                    "minyak resto": "minyak goreng resto 2 l",
+                    "minyak kita apical refill 12 x 1 lt": "minyak kita apical refill 12x1 l",
+                    "vape bakar jumbo": "vape bakar jumbo",
+                    "vape liquid electric set(rumahan +isi)": "vape liquid cordless electic set (rumahan+isi)",
+                    "vape coil banyak asap": "vape coil banyak asap",
+                    "obat nyamuk kingkong": "kingkong jumbo obat nyamuk bakar",
+                    "sunlight 635 ml": "sunlight 635ml",
+                    "sunlight 375ml": "sunlight 370 (satuan)",
+                    "sunlight 230 ml": "sunlight 24 x 230 ml",
+                    "sunlight 610": "sunlight 610 ml",
+                    "sunlight 260 gr": "sunlight 260 ml",
+                    "daia +softener pink 1,5 kg": "daia +softener romantic pink 1,5kg",
+                    "daia + softener violet passion 1,5 kg": "daia +softener violet passion 1,5kg",
+                    "daia clean & fresh 1,5 kg": "daia clean&fresh 1,5kg",
+                    "daia floral blossom 1,5 kg": "daia floral blossom 1,5kg",
+                    "daia putih 1,5 kg": "daia putih 1,5 kg",
+                    "sayang pink": "sayang detergen bubuk rose 770 gr",
+                    "sayang ungu": "sayang detergen bubuk hijab lavender 770 gr",
+                    "mama lemon": "mama lemon pouch 12x690 ml",
+                    "mama jeruk nipis": "mama lemon jeruk nipis pouch 690 ml",
+                    "so klin biru": "soklin liquid blue 40 ml (beli 6 grts 1)",
+                    "so klin pink": "soklin liq korean camelia 40 ml (beli 6 grts 1)",
+                    "rinso": "rinso anti noda 770g",
+                    "mie sedap goreng ala chef devina": "mie goreng sedap ala chef 93gr",
+                    "sarden bantan": "sarden bontan 155gr",
+                    "abc sari kacang hijau 24 x 250 ml": "abc sari kacang hijau 24 x 250 ml",
+                    "sun kara 12x200ml": "sun kara 200 ml",
+                    "sun kara 36x65ml": "sun kara cube 65 ml",
+                    "royco ayam renteng 576 x 8 gr": "royco ayam renteng 576 x 8 gr",
+                    "royco sapi renteng 576 x 8 gr": "royco sapi renteng 576 x 8 gr",
+                    "pepsodent white 75 gr": "pepsodent white new 144x72gr",
+                    "beras kita 5kg": "beras kita premium 5 kg",
+                    "beras sphp 5 kg": "beras bulog sphp 5kg",
+                    "gula ta": "gula ta",
+                    "gula ta (kiloan) ½": "gula ta kiloan",
+                    "gula nusa jaya": "gula nusa kita kiloan",
+                    "gula raja gula": "gula rajagula 50 kg",
+                    "gula pasir vit kiloan": "gula vit kiloan",
+                    "migi wafer coklat 6 x 10x 45 gr": "migimigi wafer coklat 6x10x45gr",
+                    "migi wafer cocopandan 6 x 10 x 45 gr": "migimigi wafer cocopandan 6x10x45gr",
+                    "migi wafer coklat 16x10x10": "migimigi wafer coklat 16x10x10 gr",
+                    "migi wafer coklat keju 16x10x10": "migimigi wafer coklat keju 16x10x10 gr",
+                    "migi wafer stw van 16x10x10": "migimigi wafer stwvanilla 16x10x10 gr",
+                    "migi wafer stw van 6 x 10 x 45 gr": "migimigi wafer stwvanilla 6x10x45 gr",
+                    "migi wafer van cok 16x10x10": "migimigi wafer vanillacoklat 16x10x10 gr",
+                    "migi wafer van cok 6 x 10 x 45 gr": "migimigi wafer vanillacoklat 6x10x45gr",
+                    "migi wafer vanila mocca 6 x 10 x 10": "migimigi wafer vanillamocha 16x10x10 gr",
+                    "migi wafer keju 16x10x10": "migimigi wafer keju 16x10x10gr",
+                    "momogi stick capucino 12x20x5": "momogi stick cappucino 12x20x4,5gr",
+                    "momogi stik coklat 12x20x4,5": "momogi stick coklat 12x20x4,5gr",
+                    "momogi stik jagung bakar 12x20x4,5": "momogi stick jg bakar 12x20x4,5gr",
+                    "momogi stik fruity 12x20x4,5": "momogi stick frutty 12x20x4,5gr",
+                    "momogi stik keju 12x20x4,5": "momogi stick keju 12x20x4,5gr",
+                    "momogi stik keju 12x10x12": "momogi stick keju 12x10x12gr",
+                    "momogi stik jagung bakar 12x10x12": "momogi stick jg bakar 12x10x12gr",
+                    "momogi stik coklat 12x10x12": "momogi stick coklat 12x10x12gr",
+                    "momogi stik balado 12x10x12": "momogi stick balado 12x10x12gr",
+                    "momogi stick mini jg bakar 4x10x20": "momogi stickmini jg bakar 4x10x20gr",
+                    "momogi stik mini keju 4x10x20": "momogi stickmini keju 4x10x20gr",
+                    "momogi stik mini coklat 4x10x20": "momogi stickmini coklat 4x10x20gr",
+                    "momogi stik mini rumput laut 4x10x20": "momogi stickmini rumputlaut 4x10x20gr",
+                    "momogi stick2 butter caramel 12x10x12": "momogi stick buttercaramel 12x10x12gr",
+                    "momogi wafer van cok 6x20x20": "momogi wafer vanillacoklat 6x20x20gr",
+                    "momogi stick3 choco banana 4x10x20gr": "momogi stick3 choco banana 4x10x20gr",
+                    "momogi stick3 melon 4x10x20gr": "momogi stick3 melon 4x10x20gr",
+                    "momogi stick3 avocado 4x10x20gr": "momogi stick3 avocado 4x10x20gr",
+                    "momogi stick3 strawberry 4x10x20 gr": "momogi stick3 strawberry 4x10x20gr",
+                    "momogi popcorn butter 4x10x20gr": "momogi popcorn butter 4x10x20gr",
+                    "momogi popocorn caramel 4x10x20 gr": "momogi popcorn caramel 4x10x20gr",
+                    "momogi marie susu 8x20x12": "momogi marie susu 8x20x10gr",
+                    "momogi crackers manis 6x20x20 gr": "momogi crackers manis 6x20x20gr",
+                    "momogi twis jagung bakar 8x10x10 gr": "momogi twist jagungbakar 8x10x10gr",
+                    "momogi twis jagung bakar 4x10x20": "momogi twist jagungbakar 4x10x20gr",
+                    "jagijagi stik avocado 12x10x20": "jagijagi stick avocado 12x10x20gr",
+                    "jagijagi stick stw 12x10x20 gr": "jagijagi stick stw 12x10x20gr",
+                    "jagijagi stick blueberry 12x10x20 gr": "jagijagi stick blueberry 12x10x20gr",
+                    "migimigi wafer cocopandan 5x12x45 gr +container": "migimigi wafer cocopdn 5x12x45 gr +container",
+                    "criscito crak chiligarlic 8x10x10 gr": "criscito crack chiligarlic 8x10x10gr",
+                    "criscito crack rendang 8x10x10 gr": "criscito crack rendang 8x10x10gr",
+                    "criscito crack sm wagyu 8x10x10 gr": "criscito crack sm wagyu 8x10x10gr",
+                    "criscito crack sour cream 8x10x10 gr": "criscito crack sourcream 8x10x10gr",
+                    "criscito crack kimchi 8x10x10 gr": "criscito crack kimchi 8x10x10gr",
+                    "criscito crack rumput laut 8x10x10 gr": "criscito crack rumput laut 8x10x10gr",
+                    "criscito potato ori + sbl 4x10x20 gr": "criscito potato ori+sbl 4x10x20gr",
+                    "criscito potato rumput laut 4x10x20 gr": "criscito potato rumput laut 4x10x20gr",
+                    "criscito potato saus bbq 4x10x20 gr": "criscito potato saus bbq 4x10x10 gr",
+                    "yale yale crispy vanila 16x10x10 gr": "yaleyale crispy vanilla 16x10x10gr",
+                    "yale yale crispy coklat 16x10x10gr": "yaleyale crispy coklat 16x10x10gr",
+                    "frubee american sweet orange 12x20x11": "frubee american sweetorange 12x20x11gr",
+                    "frubee rasa blackcurant 12x20x11": "frubee blackcurrent 12x20x11gr",
+                    "frubee rasa jeruk nipis 12x20x11": "frubee jeruk nipis 12x20x11gr",
+                    "frubee rasa kurma 12x20x11": "frubee kurma 12x20x11 gr",
+                    "madu tj ori 24 x 12 pcs": "madu tj ori 24x12pcs",
+                    "sikat gigi formula diamond crystal 6x12": "sikat gigi formula diamond crystal 6x12",
+                    "sikat gigi formula ripple 6 x 12": "sikat gigi formula ripple 6x12",
+                    "cusson baby cotton ef 100(12x12bag)": "cussons baby cottonbuds ef 100 (12x12bag)",
+                    "cusson baby cottonbud reg 100 (24 x 6 bag)": "cussons baby cottonbuds reg 100 (24x6bag)",
+                    "cusson baby cutton bud ef 50(12x24 bag)": "cussons baby cottonbuds ef 50 (12x24bag)",
+                    "cusson baby cotton bud  reg 50 (36x8 bag)": "cussons baby cottonbuds reg 50 (36x8bag)",
+                    "max tea tarik 5 x 30 x 25 gr": "max tea tarik 5x30x25 gr",
+                    "freshcare lavender 12 x 10": "freshcare lavender 12x10 ml",
+                    "freshcare ori 12 x 10 ml": "freshcare ori 12x10 ml",
+                    "freshcare strong 12 x 10 ml": "freshcare strong 12x10 ml",
+                    "freshcare sandalwood 12 x 10 ml": "freshcare sandalwood 12x10 ml",
+                    "tisu montiss 250's": "tissu montiss 250's"
+                };
+
+                const daftarNamaAccurate = Object.keys(mapAccurate);
+                let hasilKolomSistem = [];
+                let htmlTabel = "";
+                
+                // 2. COCOKIN SAMA DATA SHEETS
+                for (let j = 4; j < dataPoint.length; j++) {
+                    let namaBarangSheets = dataPoint[j][2]; 
+                    let barisAsli = j + 1; 
+                    
+                    if (namaBarangSheets) {
+                        let keySheets = String(namaBarangSheets).trim().toLowerCase();
+                        let stokAkhir = "";
+                        let statusHtml = "";
+
+                        if (kamusAlias[keySheets]) {
+                            keySheets = kamusAlias[keySheets]; 
+                        }
+
+                        if (mapAccurate[keySheets] !== undefined) {
+                            stokAkhir = mapAccurate[keySheets];
+                            if (stokAkhir === 0) {
+                                statusHtml = '<span class="text-amber-400 font-medium">⚠️ Stok Kosong</span>';
+                            } else {
+                                statusHtml = '<span class="text-emerald-400 font-medium">✅ Ditemukan</span>';
+                            }
+                        } 
+                        else if (barangSulawesi.has(keySheets)) {
+                            stokAkhir = ""; 
+                            statusHtml = '<span class="text-amber-400 font-medium">⚠️ Diabaikan (Sulawesi)</span>';
+                        } 
+                        else {
+                            let kecocokanDitemukan = false;
+                            for (let namaAcc of daftarNamaAccurate) {
+                                if (namaAcc.includes(keySheets) || keySheets.includes(namaAcc)) {
+                                    stokAkhir = mapAccurate[namaAcc];
+                                    if (stokAkhir === 0) {
+                                        statusHtml = `<span class="text-amber-400 font-medium">⚠️ Stok Kosong (Mirip)</span>`;
+                                    } else {
+                                        statusHtml = `<span class="text-indigo-400 font-medium">🔄 Ditemukan (Mirip)</span>`;
+                                    }
+                                    kecocokanDitemukan = true;
+                                    break;
+                                }
+                            }
+
+                            if (!kecocokanDitemukan) {
+                                stokAkhir = "";
+                                statusHtml = '<span class="text-rose-400 font-medium">❌ Barang / Stok Kosong</span>';
+                            }
+                        }
+
+                        hasilKolomSistem.push(stokAkhir);
+                        
+                        htmlTabel += `
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4">${barisAsli}</td>
+                                <td class="p-4">${namaBarangSheets}</td>
+                                <td class="p-4 font-medium text-white">${stokAkhir}</td>
+                                <td class="p-4">${statusHtml}</td>
+                            </tr>
+                        `;
+                    } else {
+                        hasilKolomSistem.push("");
+                        htmlTabel += `<tr><td class="p-4">${barisAsli}</td><td class="p-4 italic text-slate-500">Baris Kosong</td><td class="p-4"></td><td class="p-4">-</td></tr>`;
+                    }
+                }
+
+                document.getElementById('tableBody').innerHTML = htmlTabel;
+                document.getElementById('outputData').value = hasilKolomSistem.join("\n");
+                
+                document.getElementById('resultPanel').classList.remove('hidden');
+                document.getElementById('resultPanel').classList.add('flex');
+                
+            } catch (error) {
+                alert("Yah, ada error waktu baca file sayang: " + error.message);
+            } finally {
+                document.getElementById('btnProses').innerHTML = "Mulai Proses Data";
+            }
+        }
+
+        function copyKeClipboard() {
+            const copyText = document.getElementById("outputData");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            alert("Berhasil di-copy! Semangat lanjutin kerjanya sayang ❤️");
+        }
+    </script>
+</body>
+</html>
